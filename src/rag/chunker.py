@@ -90,8 +90,10 @@ def chunk_python(
             continue
         if node.end_lineno is None:
             continue
-
-        start_idx = node.lineno - 1
+        if node.decorator_list:
+            start_idx = node.decorator_list[0].lineno - 1
+        else:
+            start_idx = node.lineno - 1
         end_idx = node.end_lineno
         if start_idx < 0 or end_idx >= len(offsets):
             continue
@@ -134,9 +136,21 @@ def chunk_markdown(
     if not content.strip():
         return []
 
+    fenced_ranges: list[tuple[int, int]] = []
+    for fence in re.finditer(r"(?m)^(`{3,}|~{3,}).*\n", content):
+        if fenced_ranges and not fenced_ranges[-1][1]:
+            fenced_ranges[-1] = (fenced_ranges[-1][0], fence.end())
+        else:
+            fenced_ranges.append((fence.start(), 0))
+    if fenced_ranges and not fenced_ranges[-1][1]:
+        fenced_ranges[-1] = (fenced_ranges[-1][0], len(content))
+
+    def _inside_fence(pos: int) -> bool:
+        return any(s <= pos < e for s, e in fenced_ranges)
+
     boundaries = [0]
     for match in re.finditer(r"(?m)^#{1,6}\s+", content):
-        if match.start() > 0:
+        if match.start() > 0 and not _inside_fence(match.start()):
             boundaries.append(match.start())
     boundaries.append(len(content))
 
