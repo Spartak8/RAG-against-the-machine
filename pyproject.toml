@@ -7,7 +7,9 @@ requires-python = ">=3.10"
 dependencies = [
     "fire>=0.5",
     "pydantic>=2",
+    "torch>=2.14.1",
     "tqdm>=4",
+    "transformers>=5.20.2",
 ]
 
 [dependency-groups]
@@ -18,3 +20,7 @@ dev = [
 ]
 [tool.mypy]
 exclude = ['^data/', '^\.venv/']
+[[tool.mypy.overrides]]
+module = ["torch", "torch.*", "transformers", "transformers.*"]
+follow_imports = "skip"
+ignore_missing_imports = true
