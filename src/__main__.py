@@ -19,6 +19,7 @@ from .rag.evaluator import evaluate_search_results
 from .rag.generator import AnswerGenerator, DEFAULT_MODEL_NAME
 from .rag.indexer import build_index
 from .rag.retriever import BM25Retriever
+from .rag.api import run_server
 
 
 class RagCLI:
@@ -221,6 +222,24 @@ class RagCLI:
             OSError,
         ) as exc:
             print(f"Error during evaluate: {exc}", file=sys.stderr)
+
+    def serve(
+        self,
+        host: str = "127.0.0.1",
+        port: int = 8000,
+        index_dir: str = "data/processed",
+        model_name: str = DEFAULT_MODEL_NAME,
+    ) -> None:
+        """Start the local HTTP API server for search and answer queries."""
+        try:
+            run_server(
+                host=host,
+                port=port,
+                index_dir=index_dir,
+                model_name=model_name,
+            )
+        except (FileNotFoundError, OSError, ValueError) as exc:
+            print(f"Error starting HTTP API: {exc}", file=sys.stderr)
 
 
 def main() -> None:
